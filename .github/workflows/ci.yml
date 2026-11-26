@@ -1,0 +1,72 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  PROMETHEUS_IMAGE: prom/prometheus:v3.16.0@sha256:e04987641b57704f408e31f6373ba4138ecf27cb4a165d24aabb6c38fddd0f06
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen
+      - run: uv run ruff check
+      - run: uv run pytest -q
+
+  promtool:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: promtool test rules
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/ops/prometheus:/etc/prometheus:ro" \
+            "$PROMETHEUS_IMAGE" test rules /etc/prometheus/alerts_test.yml
+      - name: promtool check config
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/ops/prometheus:/etc/prometheus:ro" \
+            "$PROMETHEUS_IMAGE" check config /etc/prometheus/prometheus.yml
+
+  smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      LLM_MODE: stub
+    steps:
+      - uses: actions/checkout@v7
+      - name: Create .env with generated secrets
+        run: |
+          cp .env.example .env
+          sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$(openssl rand -hex 32)|" .env
+          sed -i "s|^PSEUDONYM_KEY=.*|PSEUDONYM_KEY=$(openssl rand -hex 32)|" .env
+          test "$(grep -c -E '^(JWT_SECRET|PSEUDONYM_KEY)=.{64}$' .env)" = 2
+      - name: Start stack
+        run: docker compose -p gma-ci up --build --wait
+      - name: Chat smoke
+        run: |
+          set -euo pipefail
+          TOKEN="$(docker compose -p gma-ci exec -T api python -m getnet_multi_agent.cli token --sub cliente1988 --role merchant | tail -n 1 | tr -d '\r\n')"
+          test -n "$TOKEN"
+          CODE="$(curl -sS -o body.json -w '%{http_code}' -X POST http://127.0.0.1:8000/chat \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d '{"message":"What'"'"'s the euro exchange rate today?","user_id":"cliente1988"}')"
+          cat body.json; echo
+          test "$CODE" = 200
+          python3 -c 'import json; d = json.load(open("body.json")); missing = [k for k in ("answer", "status", "route") if k not in d]; assert not missing, missing'
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -p gma-ci logs --tail 100
+      - name: Tear down
+        if: always()
+        run: docker compose -p gma-ci down -v

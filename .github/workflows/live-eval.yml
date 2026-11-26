@@ -1,0 +1,52 @@
+name: live-eval
+
+on:
+  push:
+    tags: ["sessao-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen
+      - name: Create .env with secrets
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          test -n "$GEMINI_API_KEY"
+          cp .env.example .env
+          sed -i "s|^GEMINI_API_KEY=.*|GEMINI_API_KEY=${GEMINI_API_KEY}|" .env
+          sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$(openssl rand -hex 32)|" .env
+          sed -i "s|^PSEUDONYM_KEY=.*|PSEUDONYM_KEY=$(openssl rand -hex 32)|" .env
+      - name: Start stack
+        run: docker compose -p gma-ci up --build --wait
+      - name: Eval run
+        continue-on-error: false
+        run: uv run python evals/run.py --base-url http://127.0.0.1:8000
+      - name: Retrieval eval
+        continue-on-error: false
+        run: uv run python evals/retrieval.py --base-url http://127.0.0.1:8000
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -p gma-ci logs --tail 100
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-reports
+          path: |
+            evals/report.md
+            evals/retrieval_report.md
+            evals/results.jsonl
+          if-no-files-found: warn
+      - name: Tear down
+        if: always()
+        run: docker compose -p gma-ci down -v
