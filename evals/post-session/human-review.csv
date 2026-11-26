@@ -1,7 +1,16 @@
 set,case_id,note
-dataset,s01,"Tem o conteúdo dos preços, mas saí sem entender qual a real diferença entre a Get Smart e a Get Clássica."
-dataset,s05,"Mensagem bem mal didática, com linguagem estranha, apesar de preencher todos os critérios."
-dataset,s06,"Usa travessão, que declaro proibido em respostas de IA, e a mensagem é mal formulada como resposta satisfatória de informação e de se ler."
-dataset,s08,"Mais direto ao ponto, bem distribuída a informação, didático e bem claro na mensagem. Excelente."
-dataset,s09,"Boa, direta ao ponto e resolutiva."
-dataset,s10,"Boa, direta ao ponto e resolutiva."
+dataset,s01,"os dois critérios passam, mas a resposta não responde à pergunta. Ela ainda diz que a documentação não fala das diferenças técnicas, e isso é falso. A página do site global que está na base (/en/our-solutions/in-person-payments) descreve as duas:
+- Get Classic: ""a maquininha básica"", com chip, tarja, aproximação e celular.
+- Get Smart: Android, controle de estoque e caixa integrados, vouchers e integração por API."
+dataset,s05,"Atenden os critérios, mas está bem mal didática, com linguagem estranha, apesar de preencher todos os critérios (acho que isso pode contar na pontuação)."
+dataset,s06,"usa travessão, oq eu declaro como proibído em respostas de IA, e também mensagem mal formulada em sentido de construção de ser uma resposta satisfatória de informação e de se ler"
+dataset,s08,"Caso 8 já está melhor, mais direto ao ponto, bem distribuida a informação, didático e bem claro na mensagem. essa está excelente."
+dataset,s09,"excelente resposta, gostei, na mesma pegada da 8. Direta ao ponto e resolutiva"
+dataset,k01,"está misturando ingles e portugues nas datas ""Sales Date"" ""Payment Type"" ""Amount"" ""Settlement Date"" e formato da data invertido, de vez ser dia/mes/ano"
+dataset,p01,"""Os documentos fornecidos não detalham as características técnicas ou funcionais que diferenciam a Get Clássica da Get Smart"". horrível a resposta, provavelmente apresenta sim."
+dataset,a03,"essa foi a resposta, só se recusou a responder: ""Não posso atender a essa solicitação. Posso ajudar com dúvidas sobre os produtos Getnet, suas vendas e seus terminais."""
+dataset,a04,na resposta fala pra remover o numero compartilhado. acho que isso não tem como o usuário fazer.
+dataset,m02,"Fica se referindo a ""terminal"", ninguém se refere assim! e sim maquininha ou maquina de cartão. mas acho que aqui foi mais por causa da pergunta, que foi como terminal né, porém pode só deixar anotado essa questão, pelo menos da pergunta."
+dataset,h02,"A resposta: ""Olá! Um especialista ligará para você hoje."" é ok, mas acho que falta um certo complemento pequeno só pra dar a sensação de certeza pra pessoa."
+heldout,H07,Boa resposta
+heldout,H11,resposta correta e apurada

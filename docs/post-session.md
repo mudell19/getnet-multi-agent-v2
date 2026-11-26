@@ -82,32 +82,25 @@ The answers are new runs of the same code, so they are not identical, but the ch
 
 The held-out set was not run again: it was used once, and its judge averages in section 2 come from the defective judge. Its code checks (routing, refusals, source match) do not depend on the judge.
 
-## 4. Judge agreement and human review
+## 4. Judge calibration and human review
 
-**Second annotator, not a human calibration.** No human labeled every criterion. Instead, Claude Opus 5.5 (Anthropic, a different model family from the Gemini judge) labeled each `must_mention` and `must_not` item from the answer, the criterion and the tool records, without seeing the judge's verdicts; "could not decide" stays blank. `evals/calibrate.py report` computed the agreement ([dataset](../evals/post-session/calibration-claude/report-dataset.md), [held-out](../evals/post-session/calibration-claude/report-heldout.md)); its column is still called `human_label`.
+**Human labels.** Murilo Dell (project author) labeled every judged `must_mention` and `must_not` item on a local page that hid the judge's verdicts; "could not decide" stays blank. English cases were shown with a Gemini translation and the original one click away. `evals/calibrate.py report` computed the agreement ([dataset](../evals/post-session/calibration-human/report-dataset.md), [held-out](../evals/post-session/calibration-human/report-heldout.md)).
 
-| Judge | Answers | Items | Agreement | Cohen's kappa |
+| Judge | Answers | Items labeled | Agreement | Cohen's kappa |
 |---|---|---|---|---|
-| Post-fix | dataset re-run (section 3) | 49 | 0.980 | 0.657 |
-| Tag (before the fix) | held-out, single-run cases with judge output | 10 | 0.600 | 0.200 |
+| Post-fix | dataset re-run (section 3) | 48 | 1.000 | 1.000 |
+| Tag (before the fix) | held-out, single-run cases with judge output | 11 | 0.455 | 0.000 |
 
-- Post-fix disagreement, `s01` "invents prices": the answer says "tiered rental discounts of R$ 50,000 for sales from R$ 10,000/month", while `/todas-as-maquininhas/` says "Venda a partir de R$10 mil/mês e pague R$50,00 de aluguel na Get Smart". The judge passed a wrong price.
-- Tag-judge disagreements are the defect of section 2: H11 lists the one sale above R$ 300 on Saturday 2026-11-21, exactly as `get_receivables` returns it, and the judge called it invented; H07 answered from a web search and the judge said it answered from memory.
-- With 48 of 49 post-fix verdicts being "pass", the kappa rests on very few negative items; a balanced set with more failing answers is needed before trusting the judge on failures.
+- The tag judge disagreed with the human on 6 of 11 held-out items, all in the direction of the section 2 defect: H11 lists the one sale above R$ 300 on Saturday 2026-11-21, exactly as `get_receivables` returns it, and the judge called it invented; H07 answered from a web search and the judge failed every item.
+- The post-fix agreement is perfect but weak evidence: 47 of the 48 labels are "pass", so the kappa rests on one negative item (`a03`). A set with more failing answers is needed before trusting the judge on failures.
 
-**Human review (Murilo Dell, project author).** He read the answers and wrote notes for six of them ([`human-review.csv`](../evals/post-session/human-review.csv), in Portuguese):
+**Second annotator.** Claude Opus 5.5 (Anthropic, a different model family from the Gemini judge) labeled the same items blind to both the judge and the human ([reports](../evals/post-session/calibration-claude/)). It agreed with the human on 47 of 48 dataset items and 9 of 10 held-out items. The dataset disagreement is a flaw in the labeling page: `s01` says "tiered rental discounts of R$ 50,000 for sales from R$ 10,000/month", while `/todas-as-maquininhas/` says "pague R$50,00 de aluguel"; the translation shown to the human silently corrected the number, so the human and the judge passed "invents prices" and the second annotator, reading the original, failed it. The judge missed a wrong price.
 
-| Case | Judge scores (C/G/R/H) | Human note, translated |
-|---|---|---|
-| `s01` | 4 to 5 in each of 4 runs | Has the prices, but does not explain the real difference between the two machines. |
-| `s05` | 5/4/5/5 | Poorly explained, odd language, although it meets every criterion. |
-| `s06` | 5/5/5/5 | Uses an em dash, and as an answer it is badly built and hard to read. |
-| `s08` | 5/5/5/5 | Direct, well organized, clear. Excellent. |
-| `s09`, `s10` | 5/5/5/5 | Good, direct and resolves the question. |
+**Human review.** Beyond the labels, the human wrote notes on 13 answers ([`human-review.csv`](../evals/post-session/human-review.csv), in Portuguese). What they show that the metrics did not:
 
-He found the other answers good. What the review shows that the metrics did not:
+1. **The rubric has no clarity dimension.** `s05` (judge 5/4/5/5) reads as an odd, poorly explained status dump; `s06` (5/5/5/5) is one dense paragraph with an em dash and an internal plan condition nobody asked about. `s08` and `s09` were called excellent: direct, well organized, they solve the problem.
+2. **The Clássica and Smart answers miss the intent and state something false.** `s01` and `p01` give prices and say the documentation does not describe functional differences, but the snapshot has them: `www.getnet.net/en/our-solutions/in-person-payments` describes Get Classic as "the basic POS for your sales" and Get Smart as "the POS to make your business grow", with integrated stock and cashier. The criteria only check the price.
+3. **Merchant language.** `m02` says "terminal" where merchants say "maquininha"; `k01` shows ISO dates (`2026-11-25`) instead of day/month/year; `a04` asks the merchant to "remove" a card number from a message already sent; `h02` ("A specialist will call you today.") is correct but would reassure more with one more sentence.
+4. Notes confirming answers: H07 ("good answer") and H11 ("correct and precise").
 
-1. **The rubric has no clarity dimension.** `s05` mixes English with Portuguese menu labels and reads as a status dump; `s06` is one dense paragraph with an internal plan condition the merchant did not ask about. Both got helpfulness 5.
-2. **`s01` misses the intent of the question.** Its criteria only check the price, and the answer says the documentation does not cover functional differences, but the snapshot has them: `www.getnet.net/en/our-solutions/in-person-payments` describes Get Classic as "the basic POS for your sales" and Get Smart as "the POS to make your business grow", with integrated stock and cashier. Retrieval did not bring that page into this answer.
-
-Not done, and listed here as the next changes: a clarity criterion in the judge rubric, a functional-difference criterion for `s01`, retrieval of the global product page for the Clássica and Smart question, and a Personality rule for one language per answer and no em dashes. They change the application or the dataset, so they would be measured against this baseline before entering.
+Not done, and listed here as the next changes: a clarity criterion in the judge rubric, a functional-difference criterion for `s01` and `p01`, retrieval of the global product page for that question, and Personality rules for one language per answer, local date format, merchant vocabulary and no em dashes. They change the application or the dataset, so they would be measured against this baseline before entering.
