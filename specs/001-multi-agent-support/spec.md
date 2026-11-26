@@ -366,9 +366,9 @@ unit tests pass; the dashboard loads under the observability profile.
 
 ## Assumptions
 
-- Defaults (all configurable): message limit 2,000 characters; retrieval top-k 5; last 6 turns given
-  to the Router; tool iterations 3; supervisor iterations 3; token budget 60,000 per request.
-- `RAG_MIN_SIMILARITY` default is calibrated in the plan from the retrieval eval, not guessed here.
+- Defaults (all configurable, values from `.env`): message limit 2,000 characters; retrieval top-k
+  6; last 6 turns given to the Router; tool iterations 3; supervisor iterations 3; token budget
+  30,000 per request; `RAG_MIN_SIMILARITY` 0.62.
 - Eval thresholds are SC-002 to SC-004; the runner reads them from configuration.
 - Expected facts come from the committed snapshot; site changes after the crawl are out of scope.
 - Simulated merchant data is the only customer data; there is no real Getnet integration.
