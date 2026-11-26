@@ -16,9 +16,14 @@ def _client(settings):
     )
 
 
+def collection_name(settings) -> str:
+    """Stub (hash) and live (Gemini) embeddings never share a collection."""
+    return COLLECTION if settings.LLM_MODE == "live" else f"{COLLECTION}_stub"
+
+
 def get_collection(settings):
     return _client(settings).get_or_create_collection(
-        COLLECTION, configuration={"hnsw": {"space": "cosine"}}, embedding_function=None
+        collection_name(settings), configuration={"hnsw": {"space": "cosine"}}, embedding_function=None
     )
 
 
@@ -32,7 +37,7 @@ def count(settings) -> int:
 def reset(settings):
     client = _client(settings)
     try:
-        client.delete_collection(COLLECTION)
+        client.delete_collection(collection_name(settings))
     except Exception:
         pass
     return get_collection(settings)
