@@ -19,7 +19,7 @@ API cost USD 0.179 (0.0044 per request), judge USD 0.162, p50 4.2 s, p95 19.6 s.
 
 ## 2. Held-out set, run once
 
-The sealed set was generated outside this repository, and its SHA-256 has been in `evals/heldout.sha256` since the first commit. It was opened for the first time after the tag and run exactly once, on 2026-11-26 at about 05:55 (UTC-03:00). The run used the clean-clone container from the session's final proof (`/health/live` reports `rev 5807c7c`), whose code is identical to the tag: `git diff --stat 5807c7c sessao-60min` lists only README, session notes, eval reports and `tasks.md`.
+The sealed set was generated outside this repository, and its SHA-256 has been in `evals/heldout.sha256` since the first commit. It was opened for the first time after the tag and run exactly once, on 2026-11-26 (finished at 05:36, UTC-03:00). The run used the clean-clone container from the session's final proof (`/health/live` reports `rev 5807c7c`), whose code is identical to the tag: `git diff --stat 5807c7c sessao-60min` lists only README, session notes, eval reports and `tasks.md`.
 
 ```bash
 uv run python evals/run.py --heldout <path outside the repository>/heldout-v2.jsonl --out <report> --results <results>
@@ -50,3 +50,31 @@ Reading every failed case against the trace, the code and the data:
 4. **Expectation differences, not defects.** In H10 the terminal is offline, and the spec (FR-005) adds a Knowledge troubleshooting step; the held-out expects Support only. H19 asks which benefit card brands are enabled on the terminal, which the simulated tools do not expose. H09 also adds a short receivables-advance explanation (route `support>knowledge:rag` instead of `support`).
 
 Items 1 and 3 are measurement defects in the eval harness. Item 2 is a real coverage limit of the knowledge base. None of them was known at the tag.
+
+## 3. Measurement fixes
+
+Changes only in the eval harness and the workflow: no agent, prompt, tool, dataset or threshold changed.
+
+- **Judge evidence** (`evals/judge.py`): tool results from `trace.observations[].data` enter the evidence block marked `[tool]`; web sources are marked `[web]`, and the rubric says their text is not available, so for time-sensitive facts the judge checks that a value is specific, dated and attributed instead of marking it down for being unverifiable. RAG excerpts are unchanged.
+- **Judge budget:** each judgment opens its own request context, so the per-request token budget no longer accumulates across judge calls.
+- **Same-run results** (`evals/run.py`): `answer`, `judge_items` and the new `evidence` field now come from the same run. Before, the answer came from the last run and the item verdicts from the first judged run, which differ whenever a case was re-run; a calibration sheet built from those rows would pair an answer with verdicts about another answer.
+- **Workflow:** the retrieval eval runs whenever the stack started, even if the answer eval fails its thresholds; the job still fails.
+- Three regression tests, each failing before the fix; `uv run pytest`: 147 passed.
+
+Same 32-case dataset, same container built from the tag (`rev 5807c7c`), run locally on 2026-11-26 (finished at 05:52); report and results in [`evals/post-session/`](../evals/post-session/report.md):
+
+| Metric | Tag live eval (GitHub) | After the fix (local) |
+|---|---|---|
+| Routing accuracy | 0.931 | 0.931 |
+| Correct refusal rate | 1.000 | 1.000 |
+| Citation rate | 1.000 | 1.000 |
+| Source match | 0.929 | 0.929 |
+| Judge correctness | 4.00 | 4.76 |
+| Judge groundedness | 3.44 | 4.64 |
+| Judge relevance | 4.88 | 4.84 |
+| Judge helpfulness | 4.04 | 4.72 |
+| Verdict | FAIL | PASS |
+
+The answers are new runs of the same code, so they are not identical, but the change is where the defect was: web cases (`s02`, `s07`) and support cases (`s03`, `s08`) went from groundedness 1 to 5, while RAG cases stayed at 4 or 5. Trade-off: the judge cannot read web pages, so web scores now measure specificity and attribution, not whether today's exchange rate is right; the calibration below measures how far the judge agrees with a person.
+
+The held-out set was not run again: it was used once, and its judge averages in section 2 come from the defective judge. Its code checks (routing, refusals, source match) do not depend on the judge.

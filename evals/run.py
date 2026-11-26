@@ -177,7 +177,8 @@ def evaluate_case(case, client, token_fn, llm, first=1, reruns=3) -> dict:
             one()
     last = runs[-1]
     judged = [r for r in runs if r["judge"]]
-    jitems = [i.model_dump() for i in judged[0]["judge"].items] if judged else []
+    ref = judged[-1] if judged else last  # answer, evidence and item verdicts from the same run
+    jitems = [i.model_dump() for i in ref["judge"].items] if judged else []
     return {
         "id": case["id"], "lang": case["lang"], "category": case["category"],
         "message": case["message"], "expected_route": case["expected_route"],
@@ -189,7 +190,9 @@ def evaluate_case(case, client, token_fn, llm, first=1, reruns=3) -> dict:
            ("route_ok", "refusal_ok", "cited", "source_ok")},
         "judge_pass": majority([r["judge"].all_pass for r in judged if r["judge"].items]),
         "judge_items": jitems, "fails": last["chk"]["fails"],
-        "answer": last["rec"]["final_text"],
+        "answer": ref["rec"]["final_text"],
+        "evidence": judge_mod.evidence_lines(
+            (ref["rec"]["body"].get("trace") or {}).get("observations") or []),
         "scores": [
             {k: getattr(r["judge"], k) for k in ("correctness", "groundedness", "relevance", "helpfulness")}
             for r in judged if r["rec"]["body"].get("status") != "refused"

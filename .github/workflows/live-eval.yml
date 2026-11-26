@@ -27,12 +27,14 @@ jobs:
           sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$(openssl rand -hex 32)|" .env
           sed -i "s|^PSEUDONYM_KEY=.*|PSEUDONYM_KEY=$(openssl rand -hex 32)|" .env
       - name: Start stack
+        id: stack
         run: docker compose -p gma-ci up --build --wait
       - name: Eval run
         continue-on-error: false
         run: uv run python evals/run.py --base-url http://127.0.0.1:8000
       - name: Retrieval eval
-        continue-on-error: false
+        # runs even when the answer eval fails its thresholds; the job still fails
+        if: ${{ !cancelled() && steps.stack.outcome == 'success' }}
         run: uv run python evals/retrieval.py --base-url http://127.0.0.1:8000
       - name: Dump logs on failure
         if: failure()

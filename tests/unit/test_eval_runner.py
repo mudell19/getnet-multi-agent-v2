@@ -198,3 +198,47 @@ def test_fr_061_fr_062_shipped_dataset_parses_with_required_fields():
             "must_not", "source_url"}
     assert all(need <= r.keys() for r in rows) and len({r["id"] for r in rows}) == len(rows)
     assert {"scenario", "compound", "adversarial", "authorization", "memory", "hitl"} <= {r["category"] for r in rows}
+
+
+def test_judge_evidence_includes_tool_results_and_marks_web_sources():
+    obs = [
+        {"agent": "support", "source": None, "evidence": [],
+         "data": {"get_receivables": {"items": [{"amount": 1250.0, "settlement_date": "2026-11-26"}]}}},
+        {"agent": "knowledge", "source": "web",
+         "evidence": [{"url": "https://w.example/eur", "title": "Euro rate", "excerpt": ""}]},
+        {"agent": "knowledge", "source": "rag", "evidence": [{"url": URL, "excerpt": "ate 48x"}]},
+    ]
+    lines = run.judge_mod.evidence_lines(obs)
+    assert any(ln.startswith("- [tool get_receivables] ") and "1250.0" in ln for ln in lines)
+    assert "- [web] Euro rate (https://w.example/eur)" in lines
+    assert f"- {URL}: ate 48x" in lines
+
+
+def test_each_judgment_starts_with_a_fresh_token_budget():
+    from getnet_multi_agent.contracts import Usage
+    from getnet_multi_agent.core import request_context
+
+    seen = []
+
+    def judge_resp(**kw):
+        seen.append(request_context.tokens_used())
+        request_context.add_usage(Usage(prompt_tokens=50_000))  # above REQUEST_TOKEN_BUDGET
+        return JUDGE_OK
+
+    llm = FakeLLM({"judge": judge_resp})
+    for _ in range(3):
+        run.judge_mod.judge(case(), chat_body(), llm)
+    assert seen == [0, 0, 0]
+
+
+def test_answer_evidence_and_judge_items_come_from_the_same_run(tmp_path):
+    answers = iter(["run 1", "run 2", "run 3", "run 4"])
+    fail = {**JUDGE_OK, "items": [{**JUDGE_OK["items"][0], "verdict": "fail"}]}
+    llm = FakeLLM({"judge": [fail, fail, fail, JUDGE_OK]})
+    body = lambda msg: chat_body(answer=next(answers), sources=False)  # noqa: E731 - code check fails, so 3 reruns
+    go(tmp_path, [case(must_contain=[])], ok_handler(body), llm=llm)
+    res = json.loads((tmp_path / "results.jsonl").read_text().splitlines()[0])
+    assert res["n_runs"] == 4
+    assert res["answer"] == "run 4" and "run 4" in llm.calls[-1]["contents"]
+    assert res["judge_items"][0]["verdict"] == "pass"
+    assert res["evidence"] == [f"- {URL}: ate 48x"]
