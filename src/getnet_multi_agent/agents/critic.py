@@ -24,15 +24,20 @@ class Rewrite(BaseModel):
     query: str
 
 
-def terminal_problem(obs: Observation) -> str | None:
-    """'connectivity' for an offline terminal, 'error' for other recent terminal errors, else None."""
+DECLINE_WORDS = ("declin", "negad", "recusad", "transaction error", "erro de transa")
+
+
+def terminal_problem(obs: Observation, query: str = "") -> str | None:
+    """'error' when the user asks about a decline/error that a terminal shows, 'connectivity' for an
+    offline terminal, 'error' for other recent terminal errors, else None."""
     status = (obs.data or {}).get("get_terminal_status") or {}
     terminals = status.get("terminals") or []
+    has_errors = any(t.get("last_errors") for t in terminals)
+    if has_errors and any(w in query.lower() for w in DECLINE_WORDS):
+        return "error"
     if any(t.get("connectivity") != "online" for t in terminals):
         return "connectivity"
-    if any(t.get("last_errors") for t in terminals):
-        return "error"
-    return None
+    return "error" if has_errors else None
 
 
 def _next_id(plan: Plan) -> str:
@@ -57,7 +62,8 @@ def review(message: str, plan: Plan, observations: list[Observation], iteration:
 
     # Rule 1: an offline terminal or terminal error adds a Knowledge rag troubleshooting step.
     for obs in observations:
-        problem = terminal_problem(obs) if obs.agent == "support" else None
+        step = next((s for s in plan.steps if s.id == obs.step_id), None)
+        problem = terminal_problem(obs, f"{message} {step.query if step else ''}") if obs.agent == "support" else None
         if problem and not has_rag and allow_more_steps:
             step = Step(id=_next_id(plan), agent="knowledge", source="rag",
                         query=TROUBLESHOOT[(problem, plan.lang)])

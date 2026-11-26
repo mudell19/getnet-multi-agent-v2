@@ -34,12 +34,13 @@ class Step(BaseModel):
 
 
 class Plan(BaseModel):
-    steps: list[Step] = Field(default_factory=list)
-    lang: Lang = "en"
+    # Field order matters for structured output: decompose before planning steps.
     standalone: str = Field(description="the user message rewritten to stand alone, resolving references to earlier turns")
+    lang: Lang = "en"
     parts: list[str] = Field(default_factory=list, description="each distinct question or request in the message")
     refusal_reason: PlannedRefusal | None = None
     escalate_reason: Literal["human_requested"] | None = None
+    steps: list[Step] = Field(default_factory=list, description="one step per part, in answer order")
 
 
 class PlanRevision(BaseModel):
