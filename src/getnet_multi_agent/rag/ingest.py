@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from getnet_multi_agent.core.request_context import start_request
 from getnet_multi_agent.rag import store
 from getnet_multi_agent.rag.cache import read_cache
 from getnet_multi_agent.rag.chunk import chunk_docs
@@ -19,6 +20,7 @@ def ingest(settings, llm, rebuild: bool = False, cache_dir: Path | None = None) 
     collection = store.reset(settings) if rebuild else store.get_collection(settings)
     for i in range(0, len(chunks), BATCH):
         batch = chunks[i : i + BATCH]
+        start_request()  # ingestion is not a user request: the per-request budget applies per batch
         embeddings = llm.embed([c["text"] for c in batch], "RETRIEVAL_DOCUMENT")
         store.add_chunks(collection, batch, embeddings)
     return len(chunks)
