@@ -13,7 +13,7 @@ cal = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(cal)
 
 
-def test_export_columns(tmp_path):
+def test_fr_066_export_columns(tmp_path):
     res = tmp_path / "results.jsonl"
     res.write_text(json.dumps({"id": "s01", "answer": "Long   answer\ntext", "judge_items": [
         {"criterion": "a", "kind": "must_mention", "verdict": "pass", "rationale": ""},
@@ -27,7 +27,7 @@ def test_export_columns(tmp_path):
     assert rows[0]["answer_excerpt"] == "Long answer text"
 
 
-def test_kappa_known_example():
+def test_fr_066_kappa_known_example():
     # 2x2: both pass 20, both fail 15, judge pass/human fail 5, judge fail/human pass 10 -> po=0.7
     j = ["pass"] * 20 + ["fail"] * 15 + ["pass"] * 5 + ["fail"] * 10
     h = ["pass"] * 20 + ["fail"] * 15 + ["fail"] * 5 + ["pass"] * 10
@@ -37,7 +37,7 @@ def test_kappa_known_example():
     assert cal.cohen_kappa(["pass", "pass"], ["pass", "pass"]) == 1.0
 
 
-def test_report_agreement_and_kappa(tmp_path):
+def test_fr_066_report_agreement_and_kappa(tmp_path):
     labels = tmp_path / "labels.csv"
     with open(labels, "w", newline="") as f:
         w = csv.writer(f)

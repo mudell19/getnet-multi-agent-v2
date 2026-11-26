@@ -53,14 +53,14 @@ def _ctx():
     request_context.start_request()
 
 
-def test_fr053_usage_none_is_zero(settings):
+def test_fr_053_usage_none_is_zero(settings):
     gc, _ = client_with(settings, make_response(usage=None))
     r = gc.generate("knowledge", "hi")
     assert r.usage.prompt_tokens == r.usage.output_tokens == r.usage.thinking_tokens == 0
     assert r.usage.cost_usd == 0
 
 
-def test_fr053_cost_formula_with_search(settings):
+def test_fr_053_cost_formula_with_search(settings):
     gc, _ = client_with(
         settings, make_response(usage=(1000, 200, 300), queries=["a", "b"],
                                 chunks=[("Site", "https://v/x")])
@@ -73,14 +73,14 @@ def test_fr053_cost_formula_with_search(settings):
     assert request_context.tokens_used() == 1500
 
 
-def test_fr053_retry_once_on_429(settings):
+def test_fr_053_retry_once_on_429(settings):
     err = errors.APIError(429, {"error": {"message": "rate"}})
     gc, models = client_with(settings, err, make_response("fine"))
     assert gc.generate("knowledge", "hi").text == "fine"
     assert len(models.calls) == 2
 
 
-def test_fr053_second_failure_unavailable(settings):
+def test_fr_053_second_failure_unavailable(settings):
     err = errors.APIError(503, {"error": {"message": "down"}})
     gc, models = client_with(settings, err, err)
     with pytest.raises(LLMUnavailable):
@@ -88,14 +88,14 @@ def test_fr053_second_failure_unavailable(settings):
     assert len(models.calls) == 2
 
 
-def test_fr053_400_no_retry(settings):
+def test_fr_053_400_no_retry(settings):
     gc, models = client_with(settings, errors.APIError(400, {"error": {"message": "bad"}}))
     with pytest.raises(LLMUnavailable):
         gc.generate("knowledge", "hi")
     assert len(models.calls) == 1
 
 
-def test_fr053_raw_content_roundtrip(settings):
+def test_fr_053_raw_content_roundtrip(settings):
     gc, models = client_with(settings, make_response("first"), make_response("second"))
     r1 = gc.generate("support", "q")
     assert r1.content is not None
@@ -107,7 +107,7 @@ def test_fr053_raw_content_roundtrip(settings):
     assert sent[0].role == "user" and sent[2].parts[0].function_response.name == "t"
 
 
-def test_fr022_search_and_tools_rejected_before_call(settings):
+def test_fr_022_search_and_tools_rejected_before_call(settings):
     gc, models = client_with(settings, make_response())
     tool = ToolSpec(name="t", description="d", parameters={"type": "object", "properties": {}})
     with pytest.raises(ValueError):
@@ -135,7 +135,7 @@ def test_tools_declared_and_function_calls_parsed(settings):
         ("judge", "GEMINI_JUDGE_MODEL", "high"),
     ],
 )
-def test_fr054_task_mapping(settings, task, model_attr, think_attr):
+def test_fr_054_task_mapping(settings, task, model_attr, think_attr):
     gc, models = client_with(settings, make_response())
     gc.generate(task, "hi")
     call = models.calls[0]
@@ -143,7 +143,7 @@ def test_fr054_task_mapping(settings, task, model_attr, think_attr):
     assert call["config"].thinking_config.thinking_level.value.lower() == think_attr
 
 
-def test_fr055_budget_exceeded_before_call(settings):
+def test_fr_055_budget_exceeded_before_call(settings):
     gc, models = client_with(settings, make_response())
     request_context.add_usage(
         request_context.Usage(prompt_tokens=settings.REQUEST_TOKEN_BUDGET)

@@ -74,7 +74,7 @@ JUDGE_OK = {"correctness": 5, "groundedness": 5, "relevance": 5, "helpfulness": 
             "items": [{"criterion": "48 installments", "kind": "must_mention", "verdict": "pass", "rationale": "ok"}]}
 
 
-def test_code_checks_and_judge_parsing(tmp_path):
+def test_fr_063_code_checks_and_judge_parsing(tmp_path):
     llm = FakeLLM({"judge": JUDGE_OK})
     code, rep = go(tmp_path, [case()], ok_handler(), llm=llm)
     assert code == 0
@@ -99,7 +99,7 @@ def test_code_check_failures():
     assert ref["ok"] and ref["refusal_ok"] is True
 
 
-def test_report_metrics_adjudication_and_threshold_exit(tmp_path):
+def test_fr_064_report_metrics_adjudication_and_threshold_exit(tmp_path):
     bad = {**JUDGE_OK, "items": [{"criterion": "48 installments", "kind": "must_mention",
                                   "verdict": "fail", "rationale": "x"}], "correctness": 2, "groundedness": 2}
     code, rep = go(tmp_path, [case()], ok_handler(), llm=FakeLLM({"judge": bad}))
@@ -122,7 +122,7 @@ def test_routing_below_threshold(tmp_path):
     assert code == 1
 
 
-def test_failed_case_rerun_three_times_majority(tmp_path):
+def test_fr_065_failed_case_rerun_three_times_majority(tmp_path):
     calls = []
 
     def body_fn(msg):
@@ -179,7 +179,7 @@ def test_memory_turns_and_operator_flow(tmp_path):
     assert seen[1]["message"] == "q" and seen[2] == c["operator"]
 
 
-def test_heldout_hash_mismatch_aborts_and_match_accepted(tmp_path):
+def test_fr_068_heldout_hash_mismatch_aborts_and_match_accepted(tmp_path):
     held = write(tmp_path, [case()])
     hashfile = tmp_path / "h.sha256"
     hashfile.write_text("0" * 64 + "  heldout.jsonl\n")
@@ -192,7 +192,7 @@ def test_heldout_hash_mismatch_aborts_and_match_accepted(tmp_path):
     assert run.main(argv, **{**kw, "heldout_hash_file": tmp_path / "missing"}) == 2
 
 
-def test_shipped_dataset_parses_with_required_fields():
+def test_fr_061_fr_062_shipped_dataset_parses_with_required_fields():
     rows = run.load_jsonl(EVALS / "dataset.jsonl")
     need = {"id", "lang", "category", "user_id", "message", "expected_route", "must_mention",
             "must_not", "source_url"}

@@ -18,7 +18,7 @@ from getnet_multi_agent.security.auth import (
 from getnet_multi_agent.security.pseudonym import pseudonym
 
 
-def test_fr033_valid_token(settings):
+def test_fr_033_valid_token(settings):
     p = verify_token(settings, issue_token(settings, "cliente001", "merchant"))
     assert p == Principal(sub="cliente001", role="merchant")
 
@@ -34,7 +34,7 @@ def _enc(settings, claims, key=None):
     return jwt.encode(claims, key or settings.JWT_SECRET.get_secret_value(), algorithm="HS256")
 
 
-def test_fr033_invalid_tokens(settings):
+def test_fr_033_invalid_tokens(settings):
     bad = {
         "expired": _enc(settings, _claims(settings, exp=int(time.time()) - 10)),
         "aud": _enc(settings, _claims(settings, aud="other")),
@@ -73,13 +73,13 @@ def client(settings):
     return TestClient(app)
 
 
-def test_fr033_dependencies_401(client):
+def test_fr_033_dependencies_401(client):
     assert client.get("/m").status_code == 401
     r = client.get("/m", headers={"Authorization": "Bearer nope"})
     assert r.status_code == 401 and r.json()["detail"]["code"] == "unauthorized"
 
 
-def test_fr034_role_enforced(client, settings):
+def test_fr_034_role_enforced(client, settings):
     op = {"Authorization": f"Bearer {issue_token(settings, 'op1', 'operator')}"}
     me = {"Authorization": f"Bearer {issue_token(settings, 'cliente001', 'merchant')}"}
     r = client.get("/m", headers=op)
@@ -89,7 +89,7 @@ def test_fr034_role_enforced(client, settings):
     assert client.get("/o", headers=op).status_code == 200
 
 
-def test_fr035_cli_token(monkeypatch, tmp_path, capsys):
+def test_fr_035_cli_token(monkeypatch, tmp_path, capsys):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("JWT_SECRET", "cli-secret-cli-secret-cli-secret-0123456789")
     get_settings.cache_clear()
@@ -102,7 +102,7 @@ def test_fr035_cli_token(monkeypatch, tmp_path, capsys):
         get_settings.cache_clear()
 
 
-def test_fr036_pseudonym(settings):
+def test_fr_036_pseudonym(settings):
     a = pseudonym("cliente001", settings)
     assert a == pseudonym("cliente001", settings)
     assert len(a) == 16 and int(a, 16) >= 0 and a != "cliente001"

@@ -19,7 +19,7 @@ def test_request_context_defaults_and_usage():
     assert request_context.tokens_used() == 0 and request_context.usages() == []
 
 
-def test_fr057_log_line_is_json_with_request_id():
+def test_fr_057_log_line_is_json_with_request_id():
     buf = io.StringIO()
     handler = logging.StreamHandler(buf)
     handler.setFormatter(JsonFormatter())
@@ -35,7 +35,7 @@ def test_fr057_log_line_is_json_with_request_id():
     assert {"ts", "level", "logger"} <= data.keys()
 
 
-def test_fr058_render_has_all_metrics_and_ticket_values():
+def test_fr_058_render_has_all_metrics_and_ticket_values():
     metrics.REQUESTS.labels("knowledge", "answered").inc()
     metrics.LATENCY.observe(1.2)
     metrics.record_llm(Usage(model="m", prompt_tokens=3, output_tokens=2, cost_usd=0.01))
