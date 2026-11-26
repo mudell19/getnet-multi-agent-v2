@@ -12,18 +12,21 @@ LANG = {"en": "English", "pt": "Brazilian Portuguese"}
 _TOKEN = re.compile(r"\w+", re.UNICODE)
 
 
-def excerpt(text: str, focus: str, width: int = 240) -> str:
-    """Window of `text` with the most tokens shared with `focus` (keeps the evidence checkable)."""
+def excerpt(text: str, focus: str, width: int = 300) -> str:
+    """Two non-overlapping windows of `text` sharing the most tokens with `focus` (numbers weigh
+    more), so the facts used in the answer stay checkable in the trace evidence."""
     focus_tokens = {t for t in _TOKEN.findall(focus.lower()) if len(t) > 2 or t.isdigit()}
-    if len(text) <= width:
+    if len(text) <= 2 * width:
         return text
-    best, best_score = 0, -1
+    scored = []
     for start in range(0, len(text) - width + 1, 40):
         window = text[start:start + width].lower()
-        score = sum(1 for t in focus_tokens if t in window)
-        if score > best_score:
-            best, best_score = start, score
-    return text[best:best + width]
+        scored.append((sum(3 if t.isdigit() else 1 for t in focus_tokens if t in window), -start))
+    scored.sort(reverse=True)
+    first = -scored[0][1]
+    second = next((-st for _, st in scored[1:] if abs(-st - first) >= width), None)
+    starts = sorted(x for x in (first, second) if x is not None)
+    return " … ".join(text[x:x + width] for x in starts)
 
 
 def _context(chunks: list[RankedChunk]) -> str:
