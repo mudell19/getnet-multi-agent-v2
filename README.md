@@ -4,6 +4,8 @@ A FastAPI service that answers Getnet merchant messages with four cooperating ag
 
 Design source of truth: [`specs/001-multi-agent-support/`](specs/001-multi-agent-support/spec.md) (spec, plan, contracts) and the [constitution](.specify/memory/constitution.md). Security analysis: [`docs/threat-model.md`](docs/threat-model.md). The challenge statement is in [`docs/challenge.md`](docs/challenge.md).
 
+**Post-session.** Everything up to the tag `sessao-60min` was built in the 60-minute session ([session notes](docs/session-notes.md)). Later commits are marked post-session and described in [`docs/post-session.md`](docs/post-session.md): the live eval on GitHub, the held-out run and what it found.
+
 ## Quick start
 
 Requirements: Docker with Compose. A Gemini API key is needed for live mode only.
@@ -317,7 +319,7 @@ Results are written by the runners to `evals/report.md` and `evals/retrieval_rep
 
 **`evals/retrieval.py`** computes Hit@k, Recall@k, MRR, nDCG@k, context precision and context recall from `evals/retrieval.jsonl` (English and Portuguese queries), split by language and by hybrid versus vector-only retrieval.
 
-**Held-out set.** The SHA-256 of a sealed held-out file was committed in `evals/heldout.sha256` before any code. The file is kept outside the repository and was not opened during development. `--heldout PATH` verifies the hash before running.
+**Held-out set.** The SHA-256 of a sealed held-out file was committed in `evals/heldout.sha256` before any code. The file is kept outside the repository and was not opened during development. `--heldout PATH` verifies the hash before running. Post-session, the file was run once and published with its results in `evals/heldout/` ([analysis](docs/post-session.md#2-held-out-set-run-once)).
 
 ```bash
 uv run python evals/run.py --base-url http://127.0.0.1:8000                       # writes evals/report.md
