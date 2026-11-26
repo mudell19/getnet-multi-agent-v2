@@ -16,7 +16,9 @@ def ready(request: Request):
     s = request.app.state.settings
     chunks = store.count(s)
     db_ok = request.app.state.db.ping()
-    if chunks > 0 and db_ok:
+    ingesting = request.app.state.ingest_status == "running"  # partial collection is not ready
+    if chunks > 0 and db_ok and not ingesting:
         return {"status": "ready", "chunks": chunks}
-    reason = "database unavailable" if not db_ok else f"knowledge base empty ({request.app.state.ingest_status})"
+    reason = ("database unavailable" if not db_ok else
+              f"knowledge base not ready ({request.app.state.ingest_status}, {chunks} chunks)")
     return JSONResponse(status_code=503, content={"status": "not_ready", "reason": reason})

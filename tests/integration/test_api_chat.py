@@ -81,3 +81,13 @@ def test_fr_023_startup_ingestion_makes_service_ready(settings, fake_llm, monkey
                 break
             time.sleep(0.5)
         assert c.get("/health/ready").json()["chunks"] > 500
+
+
+def test_fr_052_not_ready_while_ingestion_running(client, auth, monkeypatch):
+    from getnet_multi_agent.rag import store
+
+    monkeypatch.setattr(store, "count", lambda s: 200)
+    client.app.state.ingest_status = "running"
+    assert client.get("/health/ready").status_code == 503
+    client.app.state.ingest_status = "done"
+    assert client.get("/health/ready").json() == {"status": "ready", "chunks": 200}
