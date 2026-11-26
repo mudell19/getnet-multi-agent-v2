@@ -1,0 +1,67 @@
+{
+  "_note": "Simulated merchant data. Dates are day offsets relative to today (UTC-03:00); 'minutes_ago' is relative to now.",
+  "merchants": {
+    "cliente1988": {
+      "name": "Padaria Exemplo (simulated)",
+      "terminals": [
+        {
+          "id": "T-1001",
+          "model": "Get Smart",
+          "connectivity": "offline",
+          "last_seen_minutes_ago": 95,
+          "last_errors": [
+            {"minutes_ago": 95, "code": "NET-04", "kind": "connectivity",
+             "message": "No data network: chip not registered on the mobile network and Wi-Fi not configured."}
+          ],
+          "suggested_actions": [
+            "Restart the terminal.",
+            "Check that the chip is inserted in SIM1 with the metal side down, or connect the terminal to Wi-Fi.",
+            "Run the communication test (teste de comunicação) from the terminal menu."
+          ]
+        },
+        {
+          "id": "T-1002",
+          "model": "Get Clássica",
+          "connectivity": "online",
+          "last_seen_minutes_ago": 1,
+          "last_errors": [
+            {"minutes_ago": 38, "code": "51", "kind": "transaction_decline",
+             "message": "Transaction declined by the card issuer: insufficient funds (code 51). Amount R$ 245,90, credit."}
+          ],
+          "suggested_actions": [
+            "Ask the customer to use another card or another payment method (debit, Pix).",
+            "The decline came from the card issuer; the terminal is working normally.",
+            "If declines repeat with different cards, contact Getnet support."
+          ]
+        }
+      ],
+      "sales": [
+        {"day_offset": -1, "amount": 1250.00, "payment_type": "debit", "settlement_day_offset": 0},
+        {"day_offset": -1, "amount": 3480.50, "payment_type": "credit", "settlement_day_offset": 29},
+        {"day_offset": -1, "amount": 820.00, "payment_type": "pix", "settlement_day_offset": -1},
+        {"day_offset": -2, "amount": 2100.00, "payment_type": "credit", "settlement_day_offset": 28},
+        {"day_offset": -2, "amount": 640.30, "payment_type": "debit", "settlement_day_offset": -1},
+        {"day_offset": -3, "amount": 1575.00, "payment_type": "credit_installments_3x", "settlement_day_offset": 27},
+        {"day_offset": -4, "amount": 910.00, "payment_type": "debit", "settlement_day_offset": -3},
+        {"day_offset": -5, "amount": 2890.00, "payment_type": "credit", "settlement_day_offset": 25}
+      ]
+    },
+    "cliente2000": {
+      "name": "Mercado Modelo (simulated)",
+      "terminals": [
+        {
+          "id": "T-2001",
+          "model": "Get Smart",
+          "connectivity": "online",
+          "last_seen_minutes_ago": 3,
+          "last_errors": [],
+          "suggested_actions": []
+        }
+      ],
+      "sales": [
+        {"day_offset": -1, "amount": 15400.00, "payment_type": "credit", "settlement_day_offset": 29},
+        {"day_offset": -1, "amount": 4200.00, "payment_type": "debit", "settlement_day_offset": 0}
+      ]
+    }
+  }
+}
