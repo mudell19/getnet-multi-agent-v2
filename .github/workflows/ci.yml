@@ -15,9 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
-        with:
-          python-version: "3.12"
+      # astral-sh/setup-uv@v10 does not exist (CI run 1); install the lockfile's uv version instead
+      - name: Install uv 0.13.6
+        run: pipx install uv==0.13.6 && uv python install 3.12
       - run: uv sync --frozen
       - run: uv run ruff check
       - run: uv run pytest -q
