@@ -15,6 +15,7 @@ GROUPS: list[tuple[str, ...]] = [
      "domicílio bancário", "conta digital", "get conta"),
     ("internet", "connection", "conexão", "conexao", "chip", "teste de comunicação",
      "teste de comunicacao", "wi-fi", "wifi", "sinal"),
+    ("whatsapp", "rede social", "redes sociais", "social media", "social network"),
 ]
 
 
