@@ -155,6 +155,9 @@ def run(message: str, principal: Principal, summary: str, last_turns: list[dict]
         trace.critic_notes.extend(f"iter {iteration}: {n}" for n in verdict.notes)
         if verdict.revisions:
             metrics.REPLANS.inc(len(verdict.revisions))
+        for rev in verdict.revisions:
+            if rev.action == "drop":
+                observations.pop(rev.step_id, None)
         # a retried step supersedes its original observation
         for s in new_steps:
             if s.id.endswith("r"):

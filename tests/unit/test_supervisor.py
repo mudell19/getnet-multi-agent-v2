@@ -89,3 +89,15 @@ def test_fr_030_planned_refusal_and_human_request(settings, fake_llm):
     fake_llm.responses["router"] = Plan(steps=[], lang="en", standalone="human", escalate_reason="human_requested")
     out = supervisor.run("I want a human", P, "", [], fake_llm, settings)
     assert out.status == "awaiting_human" and out.escalation_reason == "human_requested"
+
+
+def test_fr_005_ungrounded_enrichment_is_dropped_not_escalated(settings, fake_llm):
+    script(fake_llm, [Step(id="s1", agent="support", query="decline error")],
+           support=tool_then_text("get_terminal_status", "T-1002 decline 51 insufficient funds."))
+    fake_llm.responses["knowledge"] = AgentResult(answer="", grounded=False)
+    fake_llm.responses["critic"] = lambda **k: (
+        {"query": "transação negada"} if k["schema"].__name__ == "Rewrite" else {"complete": True})
+    out = supervisor.run("My card machine is showing a transaction decline error.", P, "", [],
+                         fake_llm, settings)
+    assert out.status == "answered" and out.route == "support" and "T-1002" in out.answer
+    assert [r.action for r in out.trace.plan_revisions][1:] == ["add", "retry", "drop"]

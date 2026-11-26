@@ -69,6 +69,7 @@ def review(message: str, plan: Plan, observations: list[Observation], iteration:
                         query=TROUBLESHOOT[(problem, plan.lang)])
             plan.steps.append(step)
             new_steps.append(step)
+            retried.add(f"enrich:{step.id}")
             has_rag = True
             reason = ("terminal offline: add site troubleshooting steps" if problem == "connectivity"
                       else "terminal error: add site guidance")
@@ -87,9 +88,15 @@ def review(message: str, plan: Plan, observations: list[Observation], iteration:
             revisions.append(PlanRevision(iteration=iteration, action="retry", step_id=obs.step_id,
                                           reason=f"no grounding; retry with rewritten query: {step.query}"))
 
-    # Rule 3: failures and exhausted retries escalate that part only.
+    # Rule 3: an ungrounded enrichment step (added by Rule 1, not asked by the user) is dropped
+    # after its retry; failures and exhausted retries of user parts escalate that part only.
     for obs in observations:
-        if obs.status == "failed" or (obs.status == "no_grounding" and (obs.step_id.endswith("r") or not allow_more_steps)):
+        exhausted = obs.status == "no_grounding" and (obs.step_id.endswith("r") or not allow_more_steps)
+        if exhausted and f"enrich:{obs.step_id.removesuffix('r')}" in retried:
+            revisions.append(PlanRevision(iteration=iteration, action="drop", step_id=obs.step_id,
+                                          reason="site has no grounded guidance for this enrichment; "
+                                                 "the support answer stands"))
+        elif obs.status == "failed" or exhausted:
             notes.append(f"{obs.step_id}: {obs.status}, escalate this part")
 
     if new_steps:
