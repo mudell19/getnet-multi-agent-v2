@@ -174,3 +174,19 @@ def test_stub_support_and_embed(settings):
     assert [s.agent for s in p.steps] == ["support", "knowledge"] and p.lang == "pt"
     assert len(stub.embed(["a"], "RETRIEVAL_QUERY")[0]) == 768
     assert stub.generate("knowledge", "hello", search=True).grounding[0].title == "stub"
+
+
+def test_fr_053_embed_sends_one_content_per_text_and_checks_count(settings):
+    from google.genai import types
+
+    from getnet_multi_agent.core.gemini_client import GeminiClient
+    from getnet_multi_agent.core.llm import LLMUnavailable
+
+    class Aggregating:  # gemini-embedding-2 behaviour with a plain list of strings
+        def embed_content(self, **kw):
+            assert all(isinstance(c, types.Content) for c in kw["contents"])
+            return NS(embeddings=[NS(values=[0.1])])
+
+    gc = GeminiClient(settings, client=NS(models=Aggregating()), sleep=lambda s: None)
+    with pytest.raises(LLMUnavailable):
+        gc.embed(["a", "b"], "RETRIEVAL_DOCUMENT")

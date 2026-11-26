@@ -183,10 +183,16 @@ class GeminiClient:
             self._check_budget()
             t0 = time.monotonic()
             resp = self._call(
+                # One Content per text: a plain list of strings is embedded as ONE multi-part
+                # content by gemini-embedding-2 (verified live: 100 texts -> 1 embedding).
                 lambda b=batch: self.client.models.embed_content(
-                    model=model, contents=b, config=cfg
+                    model=model, contents=[types.Content(parts=[types.Part(text=t)]) for t in b],
+                    config=cfg,
                 )
             )
+            if len(resp.embeddings) != len(batch):
+                raise LLMUnavailable(
+                    f"embedding count mismatch: {len(resp.embeddings)} for {len(batch)} texts")
             out.extend(list(e.values) for e in resp.embeddings)
             tokens = int(sum(len(t) for t in batch) / 4)
             usage = Usage(
