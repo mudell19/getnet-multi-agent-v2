@@ -1,0 +1,31 @@
+groups:
+  - name: getnet
+    rules:
+      - alert: HighErrorRate
+        expr: sum(rate(getnet_requests_total{status="error"}[5m])) / clamp_min(sum(rate(getnet_requests_total[5m])), 1e-9) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "More than 5% of requests ended in error over 5m"
+      - alert: HighLatencyP95
+        expr: histogram_quantile(0.95, sum by (le) (rate(getnet_request_latency_seconds_bucket[5m]))) > 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 request latency above 15 s for 10m"
+      - alert: HighCostPerHour
+        expr: sum(increase(getnet_llm_cost_usd_total[1h])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "LLM spend above 1 USD in the last hour"
+      - alert: StaleTicket
+        expr: getnet_ticket_oldest_age_seconds > 900
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Oldest open ticket waiting more than 900 s"

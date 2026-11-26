@@ -1,0 +1,109 @@
+rule_files:
+  - alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  # HighErrorRate: 50% errors -> fires; 0% errors -> silent
+  - interval: 1m
+    input_series:
+      - series: 'getnet_requests_total{route="support",status="error"}'
+        values: '0+5x20'
+      - series: 'getnet_requests_total{route="support",status="answered"}'
+        values: '0+5x20'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: HighErrorRate
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+            exp_annotations:
+              summary: "More than 5% of requests ended in error over 5m"
+  - interval: 1m
+    input_series:
+      - series: 'getnet_requests_total{route="support",status="error"}'
+        values: '0+0x20'
+      - series: 'getnet_requests_total{route="support",status="answered"}'
+        values: '0+5x20'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: HighErrorRate
+        exp_alerts: []
+
+  # HighLatencyP95: all observations in the (15, 30] bucket -> fires; all in (0, 1] -> silent
+  - interval: 1m
+    input_series:
+      - series: 'getnet_request_latency_seconds_bucket{le="1"}'
+        values: '0+0x30'
+      - series: 'getnet_request_latency_seconds_bucket{le="15"}'
+        values: '0+0x30'
+      - series: 'getnet_request_latency_seconds_bucket{le="30"}'
+        values: '0+10x30'
+      - series: 'getnet_request_latency_seconds_bucket{le="+Inf"}'
+        values: '0+10x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: HighLatencyP95
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: "p95 request latency above 15 s for 10m"
+  - interval: 1m
+    input_series:
+      - series: 'getnet_request_latency_seconds_bucket{le="1"}'
+        values: '0+10x30'
+      - series: 'getnet_request_latency_seconds_bucket{le="15"}'
+        values: '0+10x30'
+      - series: 'getnet_request_latency_seconds_bucket{le="30"}'
+        values: '0+10x30'
+      - series: 'getnet_request_latency_seconds_bucket{le="+Inf"}'
+        values: '0+10x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: HighLatencyP95
+        exp_alerts: []
+
+  # HighCostPerHour: 0.05 USD/min = 3 USD/h -> fires; 0.001 USD/min = 0.06 USD/h -> silent
+  - interval: 1m
+    input_series:
+      - series: 'getnet_llm_cost_usd_total{model="flash"}'
+        values: '0+0.05x90'
+    alert_rule_test:
+      - eval_time: 80m
+        alertname: HighCostPerHour
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: "LLM spend above 1 USD in the last hour"
+  - interval: 1m
+    input_series:
+      - series: 'getnet_llm_cost_usd_total{model="flash"}'
+        values: '0+0.001x90'
+    alert_rule_test:
+      - eval_time: 80m
+        alertname: HighCostPerHour
+        exp_alerts: []
+
+  # StaleTicket: oldest age 1200 s -> fires; 60 s -> silent
+  - interval: 1m
+    input_series:
+      - series: 'getnet_ticket_oldest_age_seconds'
+        values: '1200x20'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: StaleTicket
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: "Oldest open ticket waiting more than 900 s"
+  - interval: 1m
+    input_series:
+      - series: 'getnet_ticket_oldest_age_seconds'
+        values: '60x20'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: StaleTicket
+        exp_alerts: []
