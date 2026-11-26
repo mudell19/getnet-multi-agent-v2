@@ -1,0 +1,18 @@
+{"id": "r01", "lang": "en", "query": "How many installments can I split a sale into with the crediário?", "relevant_urls": ["https://site.getnet.com.br/crediario/"], "expected_fact": "48x"}
+{"id": "r02", "lang": "pt", "query": "Em quantas parcelas posso dividir uma venda no crediário?", "relevant_urls": ["https://site.getnet.com.br/crediario/"], "expected_fact": "48x"}
+{"id": "r03", "lang": "en", "query": "Do I need a bank account to receive via Pix?", "relevant_urls": ["https://site.getnet.com.br/duvidas/"], "expected_fact": "chave Pix"}
+{"id": "r04", "lang": "pt", "query": "Preciso de conta bancária para receber por Pix?", "relevant_urls": ["https://site.getnet.com.br/duvidas/"], "expected_fact": "chave Pix"}
+{"id": "r05", "lang": "en", "query": "How does receivables advance work?", "relevant_urls": ["https://site.getnet.com.br/duvidas/"], "expected_fact": "antecipação"}
+{"id": "r06", "lang": "pt", "query": "Como funciona a antecipação de recebíveis?", "relevant_urls": ["https://site.getnet.com.br/duvidas/"], "expected_fact": "antecipação"}
+{"id": "r07", "lang": "en", "query": "Can I sell through WhatsApp with the Payment Link?", "relevant_urls": ["https://site.getnet.com.br/link-de-pagamento/"], "expected_fact": "WhatsApp"}
+{"id": "r08", "lang": "pt", "query": "Posso vender pelo WhatsApp com o Link de Pagamento?", "relevant_urls": ["https://site.getnet.com.br/link-de-pagamento/"], "expected_fact": "WhatsApp"}
+{"id": "r09", "lang": "en", "query": "My card machine won't connect to the internet", "relevant_urls": ["https://site.getnet.com.br/duvidas/"], "expected_fact": "teste de comunicação"}
+{"id": "r10", "lang": "pt", "query": "Minha maquininha não conecta na internet", "relevant_urls": ["https://site.getnet.com.br/duvidas/"], "expected_fact": "teste de comunicação"}
+{"id": "r11", "lang": "en", "query": "Difference between Get Clássica and Get Smart rental price", "relevant_urls": ["https://site.getnet.com.br/todas-as-maquininhas/"], "expected_fact": "79,90"}
+{"id": "r12", "lang": "pt", "query": "Diferença de aluguel entre a Get Clássica e a Get Smart", "relevant_urls": ["https://site.getnet.com.br/todas-as-maquininhas/"], "expected_fact": "79,90"}
+{"id": "r13", "lang": "en", "query": "What card machines does Getnet offer?", "relevant_urls": ["https://site.getnet.com.br/todas-as-maquininhas/"], "expected_fact": "Get Smart"}
+{"id": "r14", "lang": "pt", "query": "Quais maquininhas a Getnet oferece?", "relevant_urls": ["https://site.getnet.com.br/todas-as-maquininhas/"], "expected_fact": "Get Smart"}
+{"id": "r15", "lang": "en", "query": "What is the Payment Link?", "relevant_urls": ["https://site.getnet.com.br/link-de-pagamento/"], "expected_fact": "Link de Pagamento"}
+{"id": "r16", "lang": "pt", "query": "O que é o Link de Pagamento?", "relevant_urls": ["https://site.getnet.com.br/link-de-pagamento/"], "expected_fact": "Link de Pagamento"}
+{"id": "r17", "lang": "en", "query": "What is the crediário?", "relevant_urls": ["https://site.getnet.com.br/crediario/"], "expected_fact": "crediário"}
+{"id": "r18", "lang": "pt", "query": "O que é o crediário Getnet?", "relevant_urls": ["https://site.getnet.com.br/crediario/"], "expected_fact": "crediário"}
