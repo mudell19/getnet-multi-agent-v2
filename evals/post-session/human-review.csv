@@ -1,0 +1,7 @@
+set,case_id,note
+dataset,s01,"Tem o conteúdo dos preços, mas saí sem entender qual a real diferença entre a Get Smart e a Get Clássica."
+dataset,s05,"Mensagem bem mal didática, com linguagem estranha, apesar de preencher todos os critérios."
+dataset,s06,"Usa travessão, que declaro proibido em respostas de IA, e a mensagem é mal formulada como resposta satisfatória de informação e de se ler."
+dataset,s08,"Mais direto ao ponto, bem distribuída a informação, didático e bem claro na mensagem. Excelente."
+dataset,s09,"Boa, direta ao ponto e resolutiva."
+dataset,s10,"Boa, direta ao ponto e resolutiva."

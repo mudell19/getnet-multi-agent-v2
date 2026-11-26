@@ -81,3 +81,33 @@ The GitHub column is [Actions run 45787180220](https://github.com/mudell19/getne
 The answers are new runs of the same code, so they are not identical, but the change is where the defect was: web cases (`s02`, `s07`) and support cases (`s03`, `s08`) went from groundedness 1 to 5, while RAG cases stayed at 4 or 5. Trade-off: the judge cannot read web pages, so web scores now measure specificity and attribution, not whether today's exchange rate is right; the calibration below measures how far the judge agrees with a person.
 
 The held-out set was not run again: it was used once, and its judge averages in section 2 come from the defective judge. Its code checks (routing, refusals, source match) do not depend on the judge.
+
+## 4. Judge agreement and human review
+
+**Second annotator, not a human calibration.** No human labeled every criterion. Instead, Claude Opus 5.5 (Anthropic, a different model family from the Gemini judge) labeled each `must_mention` and `must_not` item from the answer, the criterion and the tool records, without seeing the judge's verdicts; "could not decide" stays blank. `evals/calibrate.py report` computed the agreement ([dataset](../evals/post-session/calibration-claude/report-dataset.md), [held-out](../evals/post-session/calibration-claude/report-heldout.md)); its column is still called `human_label`.
+
+| Judge | Answers | Items | Agreement | Cohen's kappa |
+|---|---|---|---|---|
+| Post-fix | dataset re-run (section 3) | 49 | 0.980 | 0.657 |
+| Tag (before the fix) | held-out, single-run cases with judge output | 10 | 0.600 | 0.200 |
+
+- Post-fix disagreement, `s01` "invents prices": the answer says "tiered rental discounts of R$ 50,000 for sales from R$ 10,000/month", while `/todas-as-maquininhas/` says "Venda a partir de R$10 mil/mês e pague R$50,00 de aluguel na Get Smart". The judge passed a wrong price.
+- Tag-judge disagreements are the defect of section 2: H11 lists the one sale above R$ 300 on Saturday 2026-11-21, exactly as `get_receivables` returns it, and the judge called it invented; H07 answered from a web search and the judge said it answered from memory.
+- With 48 of 49 post-fix verdicts being "pass", the kappa rests on very few negative items; a balanced set with more failing answers is needed before trusting the judge on failures.
+
+**Human review (Murilo Dell, project author).** He read the answers and wrote notes for six of them ([`human-review.csv`](../evals/post-session/human-review.csv), in Portuguese):
+
+| Case | Judge scores (C/G/R/H) | Human note, translated |
+|---|---|---|
+| `s01` | 4 to 5 in each of 4 runs | Has the prices, but does not explain the real difference between the two machines. |
+| `s05` | 5/4/5/5 | Poorly explained, odd language, although it meets every criterion. |
+| `s06` | 5/5/5/5 | Uses an em dash, and as an answer it is badly built and hard to read. |
+| `s08` | 5/5/5/5 | Direct, well organized, clear. Excellent. |
+| `s09`, `s10` | 5/5/5/5 | Good, direct and resolves the question. |
+
+He found the other answers good. What the review shows that the metrics did not:
+
+1. **The rubric has no clarity dimension.** `s05` mixes English with Portuguese menu labels and reads as a status dump; `s06` is one dense paragraph with an internal plan condition the merchant did not ask about. Both got helpfulness 5.
+2. **`s01` misses the intent of the question.** Its criteria only check the price, and the answer says the documentation does not cover functional differences, but the snapshot has them: `www.getnet.net/en/our-solutions/in-person-payments` describes Get Classic as "the basic POS for your sales" and Get Smart as "the POS to make your business grow", with integrated stock and cashier. Retrieval did not bring that page into this answer.
+
+Not done, and listed here as the next changes: a clarity criterion in the judge rubric, a functional-difference criterion for `s01`, retrieval of the global product page for the Clássica and Smart question, and a Personality rule for one language per answer and no em dashes. They change the application or the dataset, so they would be measured against this baseline before entering.
